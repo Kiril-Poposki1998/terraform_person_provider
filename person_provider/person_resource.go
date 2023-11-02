@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -16,6 +17,11 @@ func resourcePerson() *schema.Resource {
 		Read:   readPerson,
 		Delete: deletePerson,
 		Schema: map[string]*schema.Schema{
+			"id": {
+				Type:        schema.TypeInt,
+				Required:    true,
+				Description: "Id for the person in the database",
+			},
 			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
@@ -26,11 +32,6 @@ func resourcePerson() *schema.Resource {
 				Required:    true,
 				Description: "Surname of the person",
 			},
-			"SSID": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Social security number of the person (please don't enter a valid one)",
-			},
 		},
 	}
 }
@@ -38,36 +39,59 @@ func resourcePerson() *schema.Resource {
 func createPerson(d *schema.ResourceData, m any) error {
 	name := d.Get("name").(string)
 	surname := d.Get("surname").(string)
-	url := d.Get("server_url").(string)
+	id := d.Get("id").(int)
 	postBody, _ := json.Marshal(map[string]string{
 		"name":    name,
 		"surname": surname,
 	})
 	body := bytes.NewBuffer(postBody)
-	resp, err := http.Post(url+"/api/person", "application/json", body)
+	resp, err := http.Post("http://localhost:8080/api/person", "application/json", body)
 	if err != nil {
 		return err
 	} else if resp.StatusCode != 200 {
 		return errors.New("The server responsed with a status different than 200")
 	}
+	d.SetId(strconv.Itoa(id))
 	return nil
 }
 
 func updatePerson(d *schema.ResourceData, m any) error {
-	// name := d.Get("name").(string)
-	// surname := d.Get("surname").(string)
-
+	name := d.Get("name").(string)
+	surname := d.Get("surname").(string)
+	id := d.Get("id").(int)
+	postBody, _ := json.Marshal(map[string]string{
+		"name":    name,
+		"surname": surname,
+	})
+	body := bytes.NewBuffer(postBody)
+	resp, err := http.Post("http://localhost:8080/api/person/"+d.Id(), "application/json", body)
+	if err != nil {
+		return err
+	} else if resp.StatusCode != 200 {
+		return errors.New("The server responsed with a status different than 200")
+	}
+	d.SetId(strconv.Itoa(id))
 	return nil
 }
 
 func readPerson(d *schema.ResourceData, m any) error {
-	// name := d.Get("name").(string)
-	// surname := d.Get("surname").(string)
 	return nil
 }
 
 func deletePerson(d *schema.ResourceData, m any) error {
-	// name := d.Get("name").(string)
-	// surname := d.Get("surname").(string)
+	name := d.Get("name").(string)
+	surname := d.Get("surname").(string)
+	postBody, _ := json.Marshal(map[string]string{
+		"name":    name,
+		"surname": surname,
+	})
+	body := bytes.NewBuffer(postBody)
+	id := d.Id()
+	resp, err := http.NewRequest("DELETE", "http://localhost:8080/api/person/"+id, body)
+	if err != nil {
+		return err
+	} else if resp.Response.StatusCode != 200 {
+		return errors.New("The server responsed with a status different than 200")
+	}
 	return nil
 }
