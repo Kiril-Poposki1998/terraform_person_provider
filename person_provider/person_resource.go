@@ -17,8 +17,8 @@ func resourcePerson() *schema.Resource {
 		Read:   readPerson,
 		Delete: deletePerson,
 		Schema: map[string]*schema.Schema{
-			"id": {
-				Type:        schema.TypeInt,
+			"person_id": {
+				Type:        schema.TypeString,
 				Required:    true,
 				Description: "Id for the person in the database",
 			},

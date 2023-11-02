@@ -1,2 +1,3 @@
 example_terraform/.terraform*
+example_terraform/terraform*
 .vscode/
