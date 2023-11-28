@@ -5,8 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
-	"strconv"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -39,7 +37,7 @@ func resourcePerson() *schema.Resource {
 func createPerson(d *schema.ResourceData, m any) error {
 	name := d.Get("name").(string)
 	surname := d.Get("surname").(string)
-	id := d.Get("id").(int)
+	id := d.Get("person_id").(string)
 	postBody, _ := json.Marshal(map[string]string{
 		"name":    name,
 		"surname": surname,
@@ -49,28 +47,34 @@ func createPerson(d *schema.ResourceData, m any) error {
 	if err != nil {
 		return err
 	} else if resp.StatusCode != 200 {
-		return errors.New("The server responsed with a status different than 200")
+		return errors.New("The server responded with a status different than 200")
 	}
-	d.SetId(strconv.Itoa(id))
+	d.SetId(id)
 	return nil
 }
 
 func updatePerson(d *schema.ResourceData, m any) error {
 	name := d.Get("name").(string)
 	surname := d.Get("surname").(string)
-	id := d.Get("id").(int)
+	id := d.Get("person_id").(string)
 	postBody, _ := json.Marshal(map[string]string{
 		"name":    name,
 		"surname": surname,
 	})
 	body := bytes.NewBuffer(postBody)
-	resp, err := http.Post("http://localhost:8080/api/person/"+d.Id(), "application/json", body)
+	req, err := http.NewRequest("PUT", "http://localhost:8080/api/person/"+id, body)
 	if err != nil {
 		return err
-	} else if resp.StatusCode != 200 {
-		return errors.New("The server responsed with a status different than 200")
 	}
-	d.SetId(strconv.Itoa(id))
+	req.Header.Set("Content-Type", "application/json")
+	client := &http.Client{}
+    resp, err := client.Do(req)
+	if err != nil {
+		return err
+	} else if resp.StatusCode < 200 && resp.StatusCode > 300{
+		return errors.New("The server responded with a status different than 200")
+	}
+	d.SetId(id)
 	return nil
 }
 
@@ -81,17 +85,23 @@ func readPerson(d *schema.ResourceData, m any) error {
 func deletePerson(d *schema.ResourceData, m any) error {
 	name := d.Get("name").(string)
 	surname := d.Get("surname").(string)
+	id := d.Get("person_id").(string)
 	postBody, _ := json.Marshal(map[string]string{
 		"name":    name,
 		"surname": surname,
 	})
 	body := bytes.NewBuffer(postBody)
-	id := d.Id()
-	resp, err := http.NewRequest("DELETE", "http://localhost:8080/api/person/"+id, body)
+	req, err := http.NewRequest("DELETE", "http://localhost:8080/api/person/"+id, body)
 	if err != nil {
 		return err
-	} else if resp.Response.StatusCode != 200 {
-		return errors.New("The server responsed with a status different than 200")
+	}
+	req.Header.Set("Content-Type", "application/json")
+	client := &http.Client{}
+    resp, err := client.Do(req)
+	if err != nil {
+		return err
+	} else if resp.StatusCode != 200 {
+		return errors.New("The server responded with a status different than 200")
 	}
 	return nil
 }
