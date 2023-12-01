@@ -8,11 +8,10 @@ terraform {
 }
 
 provider "person" {
-    session_id = ""
+    session_id = "371705ef-e836-4bfd-bfed-d67a5a17188d"
 }
 
 resource "person" "person1" {
-  person_id = "1"
   name = "kiril"
-  surname = "poposki"
+  surname = "dzajkovski"
 }
