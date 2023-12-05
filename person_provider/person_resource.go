@@ -86,6 +86,27 @@ func updatePerson(d *schema.ResourceData, m any) error {
 }
 
 func readPerson(d *schema.ResourceData, m any) error {
+	name := d.Get("name").(string)
+	surname := d.Get("surname").(string)
+	resp, err := http.Get("http://localhost:8080/api/person")
+	if err != nil {
+		errors.New("Cannot contact server")
+	}
+	resp_body, _ := io.ReadAll(resp.Body)
+	var resource_exists bool = false
+	jsonparser.ArrayEach(resp_body, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
+		name_bytes, _, _, _ := jsonparser.Get(value, "name")
+		surname_bytes, _, _, _ := jsonparser.Get(value, "surname")
+		id_bytes, _, _, _ := jsonparser.Get(value, "Id")
+		if name == string(name_bytes) && surname == string(surname_bytes) {
+			d.SetId(string(id_bytes))
+			resource_exists = true
+		}
+	})
+	if resource_exists {
+		return nil
+	}
+	d.SetId("")
 	return nil
 }
 

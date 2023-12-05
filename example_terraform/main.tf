@@ -13,5 +13,5 @@ provider "person" {
 
 resource "person" "person1" {
   name = "kiril"
-  surname = "dzajkovski"
+  surname = "poposki"
 }
