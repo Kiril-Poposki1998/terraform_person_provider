@@ -28,6 +28,16 @@ func resourcePerson() *schema.Resource {
 				Required:    true,
 				Description: "Surname of the person",
 			},
+			"created_at": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "The date in UTC when the resource was created",
+			},
+			"updated_at": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "The date in UTC when the resource was created",
+			},
 		},
 	}
 }
@@ -57,6 +67,10 @@ func createPerson(d *schema.ResourceData, m any) error {
 		id_bytes, _, _, _ := jsonparser.Get(value, "Id")
 		if name == string(name_bytes) && surname == string(surname_bytes) {
 			d.SetId(string(id_bytes))
+			created_at, _, _, _ := jsonparser.Get(value, "CreatedAt")
+			d.Set("created_at", string(created_at))
+			updated_at, _, _, _ := jsonparser.Get(value, "UpdatedAt")
+			d.Set("updated_at", string(updated_at))
 		}
 	})
 	return nil
@@ -82,6 +96,23 @@ func updatePerson(d *schema.ResourceData, m any) error {
 	} else if resp.StatusCode < 200 && resp.StatusCode > 300 {
 		return errors.New("The server responded with a status different than 200")
 	}
+	resp, err = http.Get("http://localhost:8080/api/person")
+	if err != nil {
+		errors.New("Cannot contact server")
+	}
+	resp_body, _ := io.ReadAll(resp.Body)
+	jsonparser.ArrayEach(resp_body, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
+		name_bytes, _, _, _ := jsonparser.Get(value, "name")
+		surname_bytes, _, _, _ := jsonparser.Get(value, "surname")
+		id_bytes, _, _, _ := jsonparser.Get(value, "Id")
+		if name == string(name_bytes) && surname == string(surname_bytes) {
+			d.SetId(string(id_bytes))
+			created_at, _, _, _ := jsonparser.Get(value, "CreatedAt")
+			d.Set("created_at", string(created_at))
+			updated_at, _, _, _ := jsonparser.Get(value, "UpdatedAt")
+			d.Set("updated_at", string(updated_at))
+		}
+	})
 	return nil
 }
 
@@ -100,6 +131,10 @@ func readPerson(d *schema.ResourceData, m any) error {
 		id_bytes, _, _, _ := jsonparser.Get(value, "Id")
 		if name == string(name_bytes) && surname == string(surname_bytes) {
 			d.SetId(string(id_bytes))
+			created_at, _, _, _ := jsonparser.Get(value, "CreatedAt")
+			d.Set("created_at", string(created_at))
+			updated_at, _, _, _ := jsonparser.Get(value, "UpdatedAt")
+			d.Set("updated_at", string(updated_at))
 			resource_exists = true
 		}
 	})

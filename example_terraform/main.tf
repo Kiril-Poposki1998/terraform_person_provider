@@ -15,3 +15,14 @@ resource "person" "person1" {
   name = "kiril"
   surname = "poposki"
 }
+
+output "id" {
+  value = person.person1.id
+}
+
+output "created_at" {
+  value = person.person1.created_at
+}
+output "updated_at" {
+  value = person.person1.updated_at
+}
